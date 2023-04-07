@@ -1,3 +1,17 @@
+from util import datenum2txt
+
+def shield_dates(txt=False):
+    dates = [
+            ('20191101', '20200131'), 
+            ('20201101', '20210131'), 
+            ('20211101', '20220112')
+    ]
+
+    if txt:
+        return dates
+    else:
+        return [(datenum2txt(date[0], day=True), datenum2txt(date[1], day=True)) for date in dates]
+
 def boundaries(domain_name=''):
     """Return a list of boundaries for the given domain_name.
     """
@@ -28,3 +42,6 @@ def boundaries(domain_name=''):
         ylim = (32, 50)
 
     return xlim, ylim
+
+if __name__ == '__main__':
+    print(shield_dates(txt=False))
