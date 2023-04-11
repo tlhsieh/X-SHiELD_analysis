@@ -28,28 +28,6 @@ def date_linspace(beg_date, end_date, delta_day):
     
     return [date.astype(datetime.datetime).strftime('%Y%m%d') for date in dates]
 
-def roll_lon_2d(da):
-    """from lon = 0-360 to lon = -180-180"""
-    
-    xvec = da[da.dims[-1]].values
-    nx = len(xvec)
-    
-    da_out = xr.DataArray(np.roll(da.values, nx//2, axis=-1), 
-                       coords=[da[da.dims[-2]], np.concatenate([xvec[nx//2:] - 360, xvec[:nx//2]])], 
-                       dims=[da.dims[-2], da.dims[-1]])
-    
-    try:
-        da_out.attrs['long_name'] = da.attrs['long_name']
-    except KeyError:
-        pass
-    
-    return da_out
-
-def flip_y_2d(da):
-    da_out = xr.DataArray(np.flip(da.values, axis=-2), coords=[np.flip(da[da.dims[-2]].values), da[da.dims[-1]]], dims=da.dims)
-
-    return da_out
-
 def _op_2d_to_3d(func2d, da3d):
     dim0 = da3d.dims[0]
     computed = [func2d(da3d[i]) for i in range(len(da3d[dim0]))]
@@ -86,6 +64,36 @@ def op_2d_to_nd(func2d, da):
     else:
         print("ndim needs to be 2, 3 or 4")
 
+def _roll_lon_2d(da):
+    """from lon = 0-360 to lon = -180-180"""
+    
+    xvec = da[da.dims[-1]].values
+    nx = len(xvec)
+    
+    da_out = xr.DataArray(np.roll(da.values, nx//2, axis=-1), 
+                       coords=[da[da.dims[-2]], np.concatenate([xvec[nx//2:] - 360, xvec[:nx//2]])], 
+                       dims=[da.dims[-2], da.dims[-1]])
+    
+    try:
+        da_out.attrs['long_name'] = da.attrs['long_name']
+    except KeyError:
+        pass
+    
+    return da_out
+
+def roll_lon(da):
+    """from lon = 0-360 to lon = -180-180"""
+
+    return op_2d_to_nd(_roll_lon_2d, da)
+
+def _flip_y_2d(da):
+    da_out = xr.DataArray(np.flip(da.values, axis=-2), coords=[np.flip(da[da.dims[-2]].values), da[da.dims[-1]]], dims=da.dims)
+
+    return da_out
+
+def flip_y(da):
+    return op_2d_to_nd(_flip_y_2d, da)
+
 def sph2cart(da):
     """da is 2d on a sphere such as StageIV data"""
     
@@ -112,3 +120,18 @@ def sph2cart(da):
         pass
     
     return da_interp
+
+def crop(da, limits):
+    """Crop the given DataArray to the given boundaries; handels different lon conventions
+    """
+
+    xlim = limits[0]
+    ylim = limits[1]
+
+    xname = da.dims[-1]
+    yname = da.dims[-2]
+
+    if xlim[0] < da[xname].values[0]:
+        da = roll_lon(da)
+
+    return da.sel({xname: slice(xlim[0], xlim[1]), yname: slice(ylim[0], ylim[1])})

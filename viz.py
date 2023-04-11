@@ -22,12 +22,11 @@ def plot_states(ax, plot_world=True):
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
 
-def plot_box(xrange, yrange, ax, lw=3, ls='--', c='c'):
-    x1 = xrange[0]
-    x2 = xrange[-1]
-    y1 = yrange[0]
-    y2 = yrange[-1]
-    ax.plot([x1, x1], [y1, y2], lw=lw, ls=ls, c=c)
-    ax.plot([x2, x2], [y1, y2], lw=lw, ls=ls, c=c)
-    ax.plot([x1, x2], [y1, y1], lw=lw, ls=ls, c=c)
-    ax.plot([x1, x2], [y2, y2], lw=lw, ls=ls, c=c)
+def plot_box(ax, limits, lw=3, ls='--', c='c'):
+    xlim = limits[0]
+    ylim = limits[1]
+
+    ax.plot([xlim[0], xlim[0]], [ylim[0], ylim[1]], lw=lw, ls=ls, c=c)
+    ax.plot([xlim[1], xlim[1]], [ylim[0], ylim[1]], lw=lw, ls=ls, c=c)
+    ax.plot([xlim[0], xlim[1]], [ylim[0], ylim[0]], lw=lw, ls=ls, c=c)
+    ax.plot([xlim[0], xlim[1]], [ylim[1], ylim[1]], lw=lw, ls=ls, c=c)

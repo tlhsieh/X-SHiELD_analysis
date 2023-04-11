@@ -81,7 +81,7 @@ def load_shield(datebeg, dateend, field, exp='', coarse=True):
     
 def load_am4_8xdaily(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='pr', exp=''):
     ## collect file paths
-    filepaths = [f'/archive/Ming.Zhao/awg/warsaw_201710/c192L33_am4p0_2010climo_new{exp}/gfdl.ncrc4-intel-prod-openmp/pp/atmos_cmip/ts/3hr/1yr/atmos_cmip.00{yr:02d}010100-00{yr:02d}123123.{field}.nc' for yr in range(yrbeg, yrend+1)]
+    filepaths = [f'/archive/Ming.Zhao/awg/warsaw_201710/c192L33_am4p0_2010climo_new{exp}/gfdl.ncrc4-intel-prod-openmp/pp/atmos_cmip/ts/3hr/1yr/atmos_cmip.{yr:04d}010100-{yr:04d}123123.{field}.nc' for yr in range(yrbeg, yrend+1)]
     print(filepaths[0])
 
     ## dmget all files
@@ -89,7 +89,24 @@ def load_am4_8xdaily(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='pr', e
 
     imonthlist = [i - 1 for i in monthlist]
 
-    da = xr.concat([list(xr.open_dataset(filepath)['pr'].groupby('time.month'))[imo][-1] for filepath in filepaths for imo in imonthlist], dim='time')
+    da = xr.concat([list(xr.open_dataset(filepath)[field].groupby('time.month'))[imo][-1] for filepath in filepaths for imo in imonthlist], dim='time') # [-1] to extract data from the list([month, data]) returned by groupby('time.month')
+
+    ## convert units
+    da = _convert_units(da, field)
+
+    return da
+
+def load_am4_monthly(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='precip', exp=''):
+    ## collect file paths
+    filepaths = [f'/archive/Ming.Zhao/awg/warsaw_201710/c192L33_am4p0_2010climo_new{exp}/gfdl.ncrc4-intel-prod-openmp/pp/atmos/ts/monthly/1yr/atmos.{yr:04d}01-{yr:04d}12.{field}.nc' for yr in range(yrbeg, yrend+1)]
+    print(filepaths[0])
+
+    ## dmget all files
+    os.system('dmget '+' '.join(filepaths))
+
+    imonthlist = [i - 1 for i in monthlist]
+
+    da = xr.concat([xr.open_dataset(filepath)[field].isel(time=imo) for filepath in filepaths for imo in imonthlist], dim='time')
 
     ## convert units
     da = _convert_units(da, field)

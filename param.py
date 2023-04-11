@@ -8,9 +8,9 @@ def shield_dates(txt=False):
     ]
 
     if txt:
-        return dates
-    else:
         return [(datenum2txt(date[0], day=True), datenum2txt(date[1], day=True)) for date in dates]
+    else:
+        return dates
 
 def boundaries(domain_name=''):
     """Return a list of boundaries for the given domain_name.
@@ -28,6 +28,9 @@ def boundaries(domain_name=''):
     elif domain_name == 'PNW':
         xlim = (-125, -115)
         ylim = (40, 50)
+    elif domain_name == 'WA-OR':
+        xlim = (-125, -117)
+        ylim = (42, 49)
     elif domain_name == 'CA-NV':
         xlim = (-125, -115)
         ylim = (33, 42)
