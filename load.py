@@ -11,10 +11,10 @@ def load_land():
 
     return land_bool_spear
 
-def load_tas():
-    tas = xr.open_dataset('/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire/history/2020010800/tas_C3072_11520x5760.fre.nc').tas[0]
+def load_zsurf():
+    zsurf = xr.open_dataset('/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire/history/2020010800/zsurf_coarse_C3072_1440x720.fre.nc').zsurf_coarse
 
-    return tas
+    return zsurf
 
 def _convert_units(da, field):
     if (field == 'pr') or (field == 'precip'):

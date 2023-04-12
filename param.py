@@ -24,7 +24,7 @@ def boundaries(domain_name=''):
         ylim = (30, 65)
     elif domain_name == 'W_US':
         xlim = (-130, -105)
-        ylim = (30, 55)
+        ylim = (30, 50)
     elif domain_name == 'PNW':
         xlim = (-125, -115)
         ylim = (40, 50)
