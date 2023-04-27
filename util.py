@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 
 import datetime
-import dateutil
+# import dateutil
 
 from scipy.interpolate import griddata
 
@@ -17,6 +17,7 @@ def datenum2txt(str_num, day=True):
     else:
         date = datetime.datetime.strptime(str_num, '%Y%m')
         str_out = date.strftime('%Y%b')
+        
     return str_out
 
 def date_linspace(beg_date, end_date, delta_day):
@@ -27,6 +28,14 @@ def date_linspace(beg_date, end_date, delta_day):
                       datetime.timedelta(days=delta_day))
     
     return [date.astype(datetime.datetime).strftime('%Y%m%d') for date in dates]
+
+def first_and_last_days_of_month(month='201911'):
+    first_date = datetime.datetime.strptime(month, '%Y%m')
+    first = first_date.strftime('%Y%m%d')
+    last_date = (first_date + datetime.timedelta(days=31)).replace(day=1) - datetime.timedelta(days=1)
+    last = last_date.strftime('%Y%m%d')
+
+    return first, last
 
 def _op_2d_to_3d(func2d, da3d):
     dim0 = da3d.dims[0]

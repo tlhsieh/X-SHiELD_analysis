@@ -12,6 +12,14 @@ def shield_dates(txt=False):
     else:
         return dates
 
+def shield_months():
+    strings = []
+    for yr in range(2019, 2022+1):
+        for mo in range(1, 12+1):
+            strings.append(f'{yr}{mo:02d}')
+
+    return strings[10:-11]
+
 def boundaries(domain_name=''):
     """Return a list of boundaries for the given domain_name.
     """
