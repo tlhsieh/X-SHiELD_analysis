@@ -10,6 +10,8 @@ import sys
 sys.path.append('/home/tlh/ipy')
 from gfd import latlon, xrinterp
 
+import glob
+
 def datenum2txt(str_num, day=True):
     if day:
         date = datetime.datetime.strptime(str_num, '%Y%m%d')
@@ -144,3 +146,19 @@ def crop(da, limits):
         da = roll_lon(da)
 
     return da.sel({xname: slice(xlim[0], xlim[1]), yname: slice(ylim[0], ylim[1])})
+
+def find_corrupted_files(exp='', field='tsfc_coarse'):
+    list1 = glob.glob(f'/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire{exp}/history/*/{field}*.nc', recursive=True)
+    list2 = glob.glob(f'/archive/kyc/Stellar_new/20191020.00Z.C3072.L79x2_pire{exp}/history/*/{field}*.nc', recursive=True)
+
+    print('===== Corrupted files =====')
+    for path in list1+list2:
+        print(path)
+        try:
+            ds = xr.open_dataset(path)
+        except OSError:
+            print('???'+path)
+    print('===== End =====')
+
+if __name__ == "__main__":
+    find_corrupted_files('_PLUS_4K', 'tsfc_coarse')

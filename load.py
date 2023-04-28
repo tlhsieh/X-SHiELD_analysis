@@ -7,14 +7,19 @@ import datetime
 from util import date_linspace
 
 def load_land():
-    land_bool_spear = xr.open_dataset('/archive/Liwei.Jia/spear_med/rf_hist/fcst/s_j11_OTA_IceAtmRes_L33/i20191101_OTA_IceAtmRes_L33_update/pp_ens_01/land/land.static.nc')['land_frac'] > 0
+    land_frac = xr.open_dataset('/archive/Liwei.Jia/spear_med/rf_hist/fcst/s_j11_OTA_IceAtmRes_L33/i20191101_OTA_IceAtmRes_L33_update/pp_ens_01/land/land.static.nc')['land_frac']
 
-    return land_bool_spear
+    return land_frac
 
 def load_zsurf():
-    zsurf = xr.open_dataset('/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire/history/2020010800/zsurf_coarse_C3072_1440x720.fre.nc').zsurf_coarse
+    zsurf = xr.open_dataset('/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire/history/2020010800/zsurf_coarse_C3072_1440x720.fre.nc')['zsurf_coarse']
 
     return zsurf
+
+def load_hgt():
+    hgt = xr.open_dataset('/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire/history/2019102000/HGTsfc_C3072_11520x5760.fre.nc')['HGTsfc']
+
+    return hgt
 
 def _convert_units(da, field):
     if (field == 'pr') or (field == 'precip'):
