@@ -1,10 +1,15 @@
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 import os
 import datetime
 
 from util import date_linspace
+
+import sys
+sys.path.append('/home/tlh/ipy')
+from gfd import xrinterp
 
 def load_land():
     land_frac = xr.open_dataset('/archive/Liwei.Jia/spear_med/rf_hist/fcst/s_j11_OTA_IceAtmRes_L33/i20191101_OTA_IceAtmRes_L33_update/pp_ens_01/land/land.static.nc')['land_frac']
@@ -84,6 +89,19 @@ def load_shield(datebeg, dateend, field, exp='', coarse=True):
     
     return da
     
+def load_shield_pp(monthlist, yr, field='pr', exp='', coarse=False):
+    """load post-processed monthly mean data"""
+
+    mo_dim = pd.Index(monthlist, name='time')
+    
+    if coarse:
+        da = xr.concat([xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire{exp}/monthly/{yr}{mo:02d}.{field}.nc') for mo in monthlist], dim=mo_dim)
+    else:
+        target_grid = xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire/monthly/202001.tsfc_coarse.nc')
+        da = xr.concat([xrinterp(xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire{exp}/monthly/{yr}{mo:02d}.{field}.nc'), target_grid) for mo in monthlist], dim=mo_dim)
+
+    return da
+        
 def load_am4_8xdaily(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='pr', exp=''):
     ## collect file paths
     filepaths = [f'/archive/Ming.Zhao/awg/warsaw_201710/c192L33_am4p0_2010climo_new{exp}/gfdl.ncrc4-intel-prod-openmp/pp/atmos_cmip/ts/3hr/1yr/atmos_cmip.{yr:04d}010100-{yr:04d}123123.{field}.nc' for yr in range(yrbeg, yrend+1)]
@@ -102,8 +120,13 @@ def load_am4_8xdaily(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='pr', e
     return da
 
 def load_am4_monthly(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='precip', exp=''):
+    if field in ['snow']:
+        module = 'land'
+    else:
+        module = 'atmos'
+
     ## collect file paths
-    filepaths = [f'/archive/Ming.Zhao/awg/warsaw_201710/c192L33_am4p0_2010climo_new{exp}/gfdl.ncrc4-intel-prod-openmp/pp/atmos/ts/monthly/1yr/atmos.{yr:04d}01-{yr:04d}12.{field}.nc' for yr in range(yrbeg, yrend+1)]
+    filepaths = [f'/archive/Ming.Zhao/awg/warsaw_201710/c192L33_am4p0_2010climo_new{exp}/gfdl.ncrc4-intel-prod-openmp/pp/{module}/ts/monthly/1yr/{module}.{yr:04d}01-{yr:04d}12.{field}.nc' for yr in range(yrbeg, yrend+1)]
     print(filepaths[0])
 
     ## dmget all files
