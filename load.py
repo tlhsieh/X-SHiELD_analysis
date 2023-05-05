@@ -89,16 +89,16 @@ def load_shield(datebeg, dateend, field, exp='', coarse=True):
     
     return da
     
-def load_shield_pp(monthlist, yr, field='pr', exp='', coarse=False):
+def load_shield_pp(monthlist, yr, field='pr', exp='', coarse_grain=True):
     """load post-processed monthly mean data"""
 
     mo_dim = pd.Index(monthlist, name='time')
     
-    if coarse:
-        da = xr.concat([xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire{exp}/monthly/{yr}{mo:02d}.{field}.nc') for mo in monthlist], dim=mo_dim)
-    else:
+    if coarse_grain:
         target_grid = xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire/monthly/202001.tsfc_coarse.nc')
         da = xr.concat([xrinterp(xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire{exp}/monthly/{yr}{mo:02d}.{field}.nc'), target_grid) for mo in monthlist], dim=mo_dim)
+    else:
+        da = xr.concat([xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire{exp}/monthly/{yr}{mo:02d}.{field}.nc') for mo in monthlist], dim=mo_dim)
 
     return da
         
