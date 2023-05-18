@@ -31,7 +31,7 @@ def boundaries(domain_name=''):
         xlim = (-150, -110)
         ylim = (30, 65)
     elif domain_name == 'W_US':
-        xlim = (-130, -105)
+        xlim = (-127, -105)
         ylim = (30, 50)
     elif domain_name == 'PNW':
         xlim = (-125, -115)
@@ -51,9 +51,13 @@ def boundaries(domain_name=''):
     elif domain_name == 'Alaska':
         xlim = (-170, -130)
         ylim = (50, 75)
-    else:
+    elif domain_name == 'Western':
         xlim = (-127, -110)
-        ylim = (32, 50)
+        ylim = (30, 50)
+    else:
+        print('Warning: domain_name not valid')
+        xlim = (-180, 180)
+        ylim = (-90, 90)
 
     return xlim, ylim
 

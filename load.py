@@ -4,6 +4,7 @@ import xarray as xr
 
 import os
 import datetime
+import dateutil
 
 from util import date_linspace
 
@@ -100,6 +101,173 @@ def load_shield_pp(monthlist, yr, field='pr', exp='', coarse_grain=True):
     else:
         da = xr.concat([xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire{exp}/monthly/{yr}{mo:02d}.{field}.nc') for mo in monthlist], dim=mo_dim)
 
+    return da
+
+def _spear_convention(date):
+    """see /archive/Liwei.Jia/spear_med/rf_hist/fcst/s_j11_OTA_IceAtmRes_L33/README"""
+    
+    year = date[:4]
+    if int(year) <= 2019:
+        return f'i{date}01_OTA_IceAtmRes_L33_update/'
+    elif year == '2020':
+        return f'i{date}01_OTA_IceAtmRes_L33_rerun/'
+    elif year == '2021':
+        return f'i{date}01_OTA_IceAtmRes_L33_update/'
+    else:
+        return f'i{date}01_OTA_IceAtmRes_L33/'
+
+def _plus11mo(date):
+    """
+    in (str)
+    out (str)
+    """
+    
+    date_out = datetime.datetime.strptime(date, '%Y%m') + dateutil.relativedelta.relativedelta(months=11)
+    
+    return date_out.strftime('%Y%m')
+
+def _plus11mo_ymd(date):
+    """
+    in (str)
+    out (str)
+    """
+    
+    date_out = datetime.datetime.strptime(date, '%Y%m') + dateutil.relativedelta.relativedelta(months=12) - dateutil.relativedelta.relativedelta(days=1)
+    
+    return date_out.strftime('%Y%m%d')
+
+def _ndays_in_month(date, lead=0):
+    """
+    in (str)
+    out (int)
+    
+    Number of days in the (current + lead) month
+    """
+    
+    datetime_curr = datetime.datetime.strptime(date, '%Y%m')
+    datetime_beg = datetime_curr + dateutil.relativedelta.relativedelta(months=lead)
+    datetime_end = datetime_curr + dateutil.relativedelta.relativedelta(months=lead+1)
+    
+    return int((datetime_end - datetime_beg)/datetime.timedelta(days=1))
+
+def load_spear_monthly(datebeg, dateend, lead=1, ens='01', field='precip'):
+    ## collect a list of months in which simulation is initialized
+    monthbeg = datetime.datetime.strptime(datebeg, '%Y%m') - dateutil.relativedelta.relativedelta(months=lead)
+    monthend = datetime.datetime.strptime(dateend, '%Y%m') - dateutil.relativedelta.relativedelta(months=lead)
+
+    months = [monthbeg]
+    monthcurr = monthbeg + dateutil.relativedelta.relativedelta(months=1)
+    while monthcurr <= monthend:
+        months.append(monthcurr)
+        monthcurr = monthcurr + dateutil.relativedelta.relativedelta(months=1)
+
+    filemonths = [month.strftime('%Y%m') for month in months]
+    
+    ## collect file paths
+    filenames = [f'/archive/Liwei.Jia/spear_med/rf_hist/fcst/s_j11_OTA_IceAtmRes_L33/{_spear_convention(month)}pp_ens_{ens}/atmos/ts/monthly/1yr/atmos.{month}-{_plus11mo(month)}.{field}.nc' for month in filemonths]
+    print(filenames[0])
+    
+    ## dmget all files
+    os.system('dmget '+' '.join(filenames))
+    
+    da = xr.concat([xr.open_dataset(filenames[i], chunks={'time': 1})[field].isel(time=1) for i in range(len(filenames))], dim='time')
+    # print(da.time.values)
+
+    ## convert units
+    da = _convert_units(da, field)
+    
+    return da
+
+def load_spear_daily(datebeg, dateend, lead=1, ens='01', field='precip'):
+    ## collect a list of months in which simulation is initialized
+    monthbeg = datetime.datetime.strptime(datebeg[:6], '%Y%m') - dateutil.relativedelta.relativedelta(months=lead)
+    monthend = datetime.datetime.strptime(dateend[:6], '%Y%m') - dateutil.relativedelta.relativedelta(months=lead)
+
+    months = [monthbeg]
+    monthcurr = monthbeg + dateutil.relativedelta.relativedelta(months=1)
+    while monthcurr <= monthend:
+        months.append(monthcurr)
+        monthcurr = monthcurr + dateutil.relativedelta.relativedelta(months=1)
+
+    filemonths = [month.strftime('%Y%m') for month in months]
+    
+    ## collect file paths
+    filenames = [f'/archive/Liwei.Jia/spear_med/rf_hist/fcst/s_j11_OTA_IceAtmRes_L33/{_spear_convention(month)}pp_ens_{ens}/atmos_daily/ts/daily/1yr/atmos_daily.{month}01-{_plus11mo_ymd(month)}.{field}.nc' for month in filemonths]
+    print(filenames[0])
+    
+    ## dmget all files
+    os.system('dmget '+' '.join(filenames))
+    
+    ndays_month0 = [_ndays_in_month(month, lead=0) for month in filemonths]
+    ndays_month1 = [_ndays_in_month(month, lead=1) for month in filemonths]
+    
+    da = xr.concat([xr.open_dataset(filenames[i], chunks={'time': 1})[field].isel(time=range(ndays_month0[i], (ndays_month0[i]+ndays_month1[i]))) for i in range(len(filenames))], dim='time')
+    # print(da.time.values)
+    
+    ## include end point in date range
+    datebeg = datetime.datetime.strptime(datebeg, '%Y%m%d')
+    datebeg = datebeg.strftime('%Y-%m-%d')
+    dateend = datetime.datetime.strptime(dateend, '%Y%m%d')
+    dateend = dateend + datetime.timedelta(days=1)
+    dateend = dateend.strftime('%Y-%m-%d')
+    
+    ## select dates
+    # itrange = range(*np.searchsorted(da.time.astype('datetime64[ns]'), [np.datetime64(datebeg), np.datetime64(dateend)]))
+    ## select dates
+    itbeg, itend = np.searchsorted(da.time.astype('datetime64[ns]'), [np.datetime64(datebeg), np.datetime64(dateend)])
+    itrange = range(itbeg, itend) # no need for itend+1 for time mean data
+    da = da.isel(time=itrange)
+    # print(da.time.values)
+
+    ## convert units
+    da = _convert_units(da, field)
+    
+    return da
+
+def load_spear_4xdaily(datebeg, dateend, lead=1, ens='01', field='precip'):
+    ## collect a list of months in which simulation is initialized
+    monthbeg = datetime.datetime.strptime(datebeg[:6], '%Y%m') - dateutil.relativedelta.relativedelta(months=lead)
+    monthend = datetime.datetime.strptime(dateend[:6], '%Y%m') - dateutil.relativedelta.relativedelta(months=lead)
+
+    months = [monthbeg]
+    monthcurr = monthbeg + dateutil.relativedelta.relativedelta(months=1)
+    while monthcurr <= monthend:
+        months.append(monthcurr)
+        monthcurr = monthcurr + dateutil.relativedelta.relativedelta(months=1)
+
+    filemonths = [month.strftime('%Y%m') for month in months]
+    
+    ## collect file paths
+    filenames = [f'/archive/Liwei.Jia/spear_med/rf_hist/fcst/s_j11_OTA_IceAtmRes_L33/{_spear_convention(month)}pp_ens_{ens}/atmos_4xdaily_avg/ts/6hr/1yr/atmos_4xdaily_avg.{month}0100-{_plus11mo_ymd(month)}23.{field}.nc' for month in filemonths]
+    print(filenames[0])
+    
+    ## dmget all files
+    os.system('dmget '+' '.join(filenames))
+    
+    ndays_month0 = [_ndays_in_month(month, lead=0) for month in filemonths]
+    ndays_month1 = [_ndays_in_month(month, lead=1) for month in filemonths]
+    
+    da = xr.concat([xr.open_dataset(filenames[i], chunks={'time': 1})[field].isel(time=range(ndays_month0[i]*4, (ndays_month0[i]+ndays_month1[i])*4)) for i in range(len(filenames))], dim='time')
+    # print(da.time.values)
+    
+    ## include end point in date range
+    datebeg = datetime.datetime.strptime(datebeg, '%Y%m%d')
+    datebeg = datebeg.strftime('%Y-%m-%d')
+    dateend = datetime.datetime.strptime(dateend, '%Y%m%d')
+    dateend = dateend + datetime.timedelta(days=1)
+    dateend = dateend.strftime('%Y-%m-%d')
+    
+    ## select dates
+    # itrange = range(*np.searchsorted(da.time.astype('datetime64[ns]'), [np.datetime64(datebeg), np.datetime64(dateend)]))
+    ## select dates
+    itbeg, itend = np.searchsorted(da.time.astype('datetime64[ns]'), [np.datetime64(datebeg), np.datetime64(dateend)])
+    itrange = range(itbeg, itend+1) # itend+1 to include hour 00 in the following day for consistency
+    da = da.isel(time=itrange)
+    print(da.time.values)
+
+    ## convert units
+    da = _convert_units(da, field)
+    
     return da
         
 def load_am4_8xdaily(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='pr', exp=''):
