@@ -171,7 +171,6 @@ def load_spear_monthly(datebeg, dateend, lead=1, ens='01', field='precip'):
     os.system('dmget '+' '.join(filenames))
     
     da = xr.concat([xr.open_dataset(filenames[i], chunks={'time': 1})[field].isel(time=1) for i in range(len(filenames))], dim='time')
-    # print(da.time.values)
 
     ## convert units
     da = _convert_units(da, field)
@@ -202,7 +201,6 @@ def load_spear_daily(datebeg, dateend, lead=1, ens='01', field='precip'):
     ndays_month1 = [_ndays_in_month(month, lead=1) for month in filemonths]
     
     da = xr.concat([xr.open_dataset(filenames[i], chunks={'time': 1})[field].isel(time=range(ndays_month0[i], (ndays_month0[i]+ndays_month1[i]))) for i in range(len(filenames))], dim='time')
-    # print(da.time.values)
     
     ## include end point in date range
     datebeg = datetime.datetime.strptime(datebeg, '%Y%m%d')
@@ -217,7 +215,6 @@ def load_spear_daily(datebeg, dateend, lead=1, ens='01', field='precip'):
     itbeg, itend = np.searchsorted(da.time.astype('datetime64[ns]'), [np.datetime64(datebeg), np.datetime64(dateend)])
     itrange = range(itbeg, itend) # no need for itend+1 for time mean data
     da = da.isel(time=itrange)
-    # print(da.time.values)
 
     ## convert units
     da = _convert_units(da, field)
@@ -248,7 +245,6 @@ def load_spear_4xdaily(datebeg, dateend, lead=1, ens='01', field='precip'):
     ndays_month1 = [_ndays_in_month(month, lead=1) for month in filemonths]
     
     da = xr.concat([xr.open_dataset(filenames[i], chunks={'time': 1})[field].isel(time=range(ndays_month0[i]*4, (ndays_month0[i]+ndays_month1[i])*4)) for i in range(len(filenames))], dim='time')
-    # print(da.time.values)
     
     ## include end point in date range
     datebeg = datetime.datetime.strptime(datebeg, '%Y%m%d')
@@ -263,30 +259,12 @@ def load_spear_4xdaily(datebeg, dateend, lead=1, ens='01', field='precip'):
     itbeg, itend = np.searchsorted(da.time.astype('datetime64[ns]'), [np.datetime64(datebeg), np.datetime64(dateend)])
     itrange = range(itbeg, itend+1) # itend+1 to include hour 00 in the following day for consistency
     da = da.isel(time=itrange)
-    print(da.time.values)
 
     ## convert units
     da = _convert_units(da, field)
     
     return da
         
-def load_am4_8xdaily(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='pr', exp=''):
-    ## collect file paths
-    filepaths = [f'/archive/Ming.Zhao/awg/warsaw_201710/c192L33_am4p0_2010climo_new{exp}/gfdl.ncrc4-intel-prod-openmp/pp/atmos_cmip/ts/3hr/1yr/atmos_cmip.{yr:04d}010100-{yr:04d}123123.{field}.nc' for yr in range(yrbeg, yrend+1)]
-    print(filepaths[0])
-
-    ## dmget all files
-    os.system('dmget '+' '.join(filepaths))
-
-    imonthlist = [i - 1 for i in monthlist]
-
-    da = xr.concat([list(xr.open_dataset(filepath)[field].groupby('time.month'))[imo][-1] for filepath in filepaths for imo in imonthlist], dim='time') # [-1] to extract data from the list([month, data]) returned by groupby('time.month')
-
-    ## convert units
-    da = _convert_units(da, field)
-
-    return da
-
 def load_am4_monthly(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='precip', exp=''):
     if field in ['snow']:
         module = 'land'
@@ -308,6 +286,87 @@ def load_am4_monthly(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='precip
     da = _convert_units(da, field)
 
     return da
+
+def load_am4_8xdaily(monthlist=range(1, 12+1), yrbeg=11, yrend=20, field='pr', exp=''):
+    ## collect file paths
+    filepaths = [f'/archive/Ming.Zhao/awg/warsaw_201710/c192L33_am4p0_2010climo_new{exp}/gfdl.ncrc4-intel-prod-openmp/pp/atmos_cmip/ts/3hr/1yr/atmos_cmip.{yr:04d}010100-{yr:04d}123123.{field}.nc' for yr in range(yrbeg, yrend+1)]
+    print(filepaths[0])
+
+    ## dmget all files
+    os.system('dmget '+' '.join(filepaths))
+
+    imonthlist = [i - 1 for i in monthlist]
+
+    da = xr.concat([list(xr.open_dataset(filepath)[field].groupby('time.month'))[imo][-1] for filepath in filepaths for imo in imonthlist], dim='time') # [-1] to extract data from the list([month, data]) returned by groupby('time.month')
+
+    ## convert units
+    da = _convert_units(da, field)
+
+    return da
+
+def load_stage4(datebeg, dateend):
+    filedates = date_linspace(datebeg, dateend, delta_day=1)
+
+    missing_files = ['20200218', '20201115', '20211201']
+    for f in missing_files:
+        if f in filedates:
+            filedates.remove(f)
+
+    cutoff = datetime.datetime.strptime('20200720', '%Y%m%d') # file format was changed on this date, see https://data.eol.ucar.edu/dataset/21.093
+        
+    if datetime.datetime.strptime(dateend, '%Y%m%d') < cutoff: # before 2020Jul20
+        path = '/archive/tlh/StageIV/precip/24hr/'
+
+        pr = xr.concat([xr.open_dataset(f'{path}ST4.{date}12.24h', engine='pynio', chunks={'time': 1})['A_PCP_GDS5_SFC_acc24h'] for date in filedates], dim='time')
+    elif cutoff < datetime.datetime.strptime(datebeg, '%Y%m%d'):
+        path = '/archive/Bill.Stern/observed/precip/24hr/'
+        
+        pr = xr.concat([xr.open_dataset(f'{path}st4_conus.{date}12.24h.grb2', engine='pynio', chunks={'time': 1})['APCP_P8_L1_GST0_acc'] for date in filedates], dim='time')
+    else:
+        print('Check input dates')
+    
+    pr.attrs['long_name'] = f"{pr.attrs['long_name']} [mm/day]" # kg/m2/day = mm/day
+    
+    return pr
+
+def load_msewp(path, filebeg, fileend, fast=False):
+    filedates = date_linspace(beg_date, end_date, delta_day=1)
+    
+    if fast:
+        pr = xr.concat([xr.open_dataset(f'{path}{date}_360x180.nc', chunks={'time': 1})['precipitation'] for date in filedates], dim='time')
+        # pr = xr.concat([xr.open_dataset(f'{path}{date}_1440x720.nc', chunks={'time': 1})['precipitation'] for date in filedates], dim='time')
+    else:
+        pr = xr.concat([xr.open_dataset(f'{path}{date}.nc', chunks={'time': 1})['precipitation'] for date in filedates], dim='time')
+    print(pr.time.values)
+    
+    pr.attrs['long_name'] = f"{pr.attrs['long_name']} [{pr.attrs['units']}]" # mm/day
+    
+    return pr
+
+def load_prism_monthly(path, datebeg, dateend):
+    ## collect a list of months in which simulation is initialized
+    monthbeg = datetime.datetime.strptime(datebeg, '%Y%m')
+    monthend = datetime.datetime.strptime(dateend, '%Y%m')
+
+    months = [monthbeg]
+    monthcurr = monthbeg + dateutil.relativedelta.relativedelta(months=1)
+    while monthcurr <= monthend:
+        months.append(monthcurr)
+        monthcurr = monthcurr + dateutil.relativedelta.relativedelta(months=1)
+
+    filedates = [f"{month.strftime('%Y')}/unzipped/PRISM_ppt_stable_4kmM3_{month.strftime('%Y%m')}_bil.bil" for month in months]
+    print(filedates)
+    
+    field = 'band_data'
+    das = [flip_y_2d(xr.open_dataset(f'{path}{date}', engine='rasterio', chunks={'time': 1})[field].isel(band=0, drop=True)) for date in filedates]
+    das_interp = [xrinterp(das[i], das[0]) for i in range(1, len(das))]
+    pr = xr.concat(das_interp, dim='time')
+
+    pr = pr/30 # mm/month -> mm/day
+    pr.name = field
+    pr.attrs['long_name'] = 'precip [mm/day]'
+
+    return pr
 
 if __name__ == "__main__":
     # da = load_am4_8xdaily([1, 2, 12], yrend=12)
