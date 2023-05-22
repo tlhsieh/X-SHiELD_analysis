@@ -13,16 +13,22 @@ sys.path.append('/home/tlh/ipy')
 from gfd import xrinterp
 
 def load_land():
+    """SPEAR-med's land fraction"""
+    
     land_frac = xr.open_dataset('/archive/Liwei.Jia/spear_med/rf_hist/fcst/s_j11_OTA_IceAtmRes_L33/i20191101_OTA_IceAtmRes_L33_update/pp_ens_01/land/land.static.nc')['land_frac']
 
     return land_frac
 
 def load_zsurf():
+    """X-SHiELD's coarse-grained surface height"""
+
     zsurf = xr.open_dataset('/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire/history/2020010800/zsurf_coarse_C3072_1440x720.fre.nc')['zsurf_coarse']
 
     return zsurf
 
 def load_hgt():
+    """X-SHiELD's high res surface height"""
+
     hgt = xr.open_dataset('/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire/history/2019102000/HGTsfc_C3072_11520x5760.fre.nc')['HGTsfc']
 
     return hgt

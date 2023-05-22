@@ -80,11 +80,17 @@ def _roll_lon_2d(da):
     xvec = da[da.dims[-1]].values
     nx = len(xvec)
     
+    if np.max(xvec) - np.min(xvec) < 350: # do not apply to regional data
+        return da
+    
+    if np.max(xvec) < 180: # no need to roll
+        return da
+    
     da_out = xr.DataArray(np.roll(da.values, nx//2, axis=-1), 
                        coords=[da[da.dims[-2]], np.concatenate([xvec[nx//2:] - 360, xvec[:nx//2]])], 
                        dims=[da.dims[-2], da.dims[-1]])
     
-    try:
+    try: # preserve long_name
         da_out.attrs['long_name'] = da.attrs['long_name']
     except KeyError:
         pass
