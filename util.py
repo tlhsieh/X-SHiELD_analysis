@@ -137,12 +137,9 @@ def sph2cart(da):
     
     return da_interp
 
-def crop(da, limits):
+def crop(da, xlim, ylim):
     """Crop the given DataArray to the given boundaries; handels different lon conventions
     """
-
-    xlim = limits[0]
-    ylim = limits[1]
 
     xname = da.dims[-1]
     yname = da.dims[-2]
