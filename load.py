@@ -22,7 +22,7 @@ def load_land():
 def load_zsurf():
     """X-SHiELD's coarse-grained surface height"""
 
-    zsurf = xr.open_dataset('/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire/history/2020010800/zsurf_coarse_C3072_1440x720.fre.nc')['zsurf_coarse']
+    zsurf = xr.open_dataset('/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire/history/2019102000/zsurf_coarse_C3072_1440x720.fre.nc')['zsurf_coarse']
 
     return zsurf
 

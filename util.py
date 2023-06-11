@@ -149,6 +149,17 @@ def crop(da, xlim, ylim):
 
     return da.sel({xname: slice(xlim[0], xlim[1]), yname: slice(ylim[0], ylim[1])})
 
+def bin_average(x, y, bins=10):
+    """Return y(x), where y is averaged over each x bin"""
+    
+    count, edges = np.histogram(x, bins)
+    accum, edges = np.histogram(x, bins, weights=y)
+    
+    x_avg = (edges[:-1] + edges[1:])/2
+    y_avg = accum/count
+    
+    return x_avg, y_avg
+
 def find_corrupted_files(exp='', field='tsfc_coarse'):
     list1 = glob.glob(f'/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire{exp}/history/*/{field}*.nc', recursive=True)
     list2 = glob.glob(f'/archive/kyc/Stellar_new/20191020.00Z.C3072.L79x2_pire{exp}/history/*/{field}*.nc', recursive=True)
