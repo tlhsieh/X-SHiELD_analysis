@@ -42,29 +42,38 @@ def _op_2d_to_3d(func2d, da3d):
     dim0 = da3d.dims[0]
     computed = [func2d(da3d[i]) for i in range(len(da3d[dim0]))]
     element = computed[0]
+
+    if len(element) == 2:
+        coords = [da3d[dim0], element[element.dims[-2]], element[element.dims[-1]]]
+        dims = [dim0, element.dims[-2], element.dims[-1]]
+    elif len(element) == 1:
+        coords = [da3d[dim0], element[element.dims[-1]]]
+        dims = [dim0, element.dims[-1]]
+    else:
+        coords = [da3d[dim0]]
+        dims = [dim0]
     
-    return xr.DataArray(
-        computed, 
-        coords=[da3d[dim0], element[element.dims[-2]], element[element.dims[-1]]], 
-        dims=[dim0, element.dims[-2], element.dims[-1]], 
-        name=da3d.name
-    )
+    return xr.DataArray(computed, coords=coords, dims=dims, name=da3d.name)
 
 def _op_2d_to_4d(func2d, da4d):
     dim0 = da4d.dims[0]
     dim1 = da4d.dims[1]
     computed = [[func2d(da4d[i, j]) for j in range(len(da4d[dim1]))] for i in range(len(da4d[dim0]))]
     element = computed[0][0]
+
+    if len(element) == 2:
+        coords = [da4d[dim0], da4d[dim1], element[element.dims[-2]], element[element.dims[-1]]]
+        dims = [dim0, dim1, element.dims[-2], element.dims[-1]]
+    elif len(element) == 1:
+        coords = [da4d[dim0], da4d[dim1], element[element.dims[-1]]]
+        dims = [dim0, dim1, element.dims[-1]]
+    else:
+        coords = [da4d[dim0], da4d[dim1]]
+        dims = [dim0, dim1]
     
-    return xr.DataArray(
-        computed, 
-        coords=[da4d[dim0], da4d[dim1], element[element.dims[-2]], element[element.dims[-1]]], 
-        dims=[dim0, dim1, element.dims[-2], element.dims[-1]], 
-        name=da4d.name
-    )
+    return xr.DataArray(computed, coords=coords, dims=dims, name=da4d.name)
 
 def op_2d_to_nd(func2d, da):
-    """Note: func2d: da2d -> da2d"""
 
     ndim = len(da.dims)
     if ndim == 2:
