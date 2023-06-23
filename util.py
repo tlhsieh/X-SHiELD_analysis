@@ -64,6 +64,8 @@ def _op_2d_to_4d(func2d, da4d):
     )
 
 def op_2d_to_nd(func2d, da):
+    """Note: func2d: da2d -> da2d"""
+
     ndim = len(da.dims)
     if ndim == 2:
         return func2d(da)
