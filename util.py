@@ -43,10 +43,10 @@ def _op_2d_to_3d(func2d, da3d):
     computed = [func2d(da3d[i]) for i in range(len(da3d[dim0]))]
     element = computed[0]
 
-    if len(element) == 2:
+    if len(element.dims) == 2:
         coords = [da3d[dim0], element[element.dims[-2]], element[element.dims[-1]]]
         dims = [dim0, element.dims[-2], element.dims[-1]]
-    elif len(element) == 1:
+    elif len(element.dims) == 1:
         coords = [da3d[dim0], element[element.dims[-1]]]
         dims = [dim0, element.dims[-1]]
     else:
@@ -61,10 +61,10 @@ def _op_2d_to_4d(func2d, da4d):
     computed = [[func2d(da4d[i, j]) for j in range(len(da4d[dim1]))] for i in range(len(da4d[dim0]))]
     element = computed[0][0]
 
-    if len(element) == 2:
+    if len(element.dims) == 2:
         coords = [da4d[dim0], da4d[dim1], element[element.dims[-2]], element[element.dims[-1]]]
         dims = [dim0, dim1, element.dims[-2], element.dims[-1]]
-    elif len(element) == 1:
+    elif len(element.dims) == 1:
         coords = [da4d[dim0], da4d[dim1], element[element.dims[-1]]]
         dims = [dim0, dim1, element.dims[-1]]
     else:
