@@ -103,9 +103,18 @@ def load_shield_pp(monthlist, yr, field='pr', exp='', coarse_grain=True):
     
     if coarse_grain:
         target_grid = xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire/monthly/202001.tsfc_coarse.nc')
-        da = xr.concat([xrinterp(xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire{exp}/monthly/{yr}{mo:02d}.{field}.nc'), target_grid) for mo in monthlist], dim=mo_dim)
+
+        filepaths = [f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire{exp}/monthly/{yr}{mo:02d}.{field}.nc' for mo in monthlist]
+        print(filepaths[0])
+        os.system('dmget '+' '.join(filepaths))
+
+        da = xr.concat([xrinterp(xr.open_dataarray(filepath), target_grid) for filepath in filepaths], dim=mo_dim)
     else:
-        da = xr.concat([xr.open_dataarray(f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire{exp}/monthly/{yr}{mo:02d}.{field}.nc') for mo in monthlist], dim=mo_dim)
+        filepaths = [f'/archive/tlh/pp_xshield/20191020.00Z.C3072.L79x2_pire{exp}/monthly/{yr}{mo:02d}.{field}.nc' for mo in monthlist]
+        print(filepaths[0])
+        os.system('dmget '+' '.join(filepaths))
+
+        da = xr.concat([xr.open_dataarray(filepath) for filepath in filepaths], dim=mo_dim)
 
     return da
 

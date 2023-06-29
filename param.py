@@ -39,6 +39,9 @@ def boundaries(domain_name=''):
     elif domain_name == 'WA-OR-CA':
         xlim = (-125, -117)
         ylim = (33, 49)
+    elif domain_name == 'WA-OR-CA_ocean':
+        xlim = (-130, -117)
+        ylim = (33, 49)
     elif domain_name == 'WA-OR':
         xlim = (-125, -117)
         ylim = (42, 49)
