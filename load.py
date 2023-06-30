@@ -96,7 +96,7 @@ def load_shield(datebeg, dateend, field, exp='', coarse=True):
     
     return da
     
-def load_shield_pp(monthlist, yr, field='pr', exp='', coarse_grain=True):
+def load_shield_pp(monthlist, yr, field='pr', exp='', coarse_grain=False):
     """load post-processed monthly mean data"""
 
     mo_dim = pd.Index(monthlist, name='time')
