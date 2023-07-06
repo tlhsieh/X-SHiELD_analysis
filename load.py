@@ -54,7 +54,10 @@ def _folder_list(exp):
         return \
     [f'/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire{exp}/history/{date}00/' for date in date_linspace('20191020', '20200507', delta_day=5)] + \
     [f'/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire{exp}/history/{date}00/' for date in date_linspace('20200512', '20201227', delta_day=1)] + \
-    [f'/archive/kyc/Stellar_new/20191020.00Z.C3072.L79x2_pire{exp}/history/{date}00/' for date in date_linspace('20201228', '20210109', delta_day=2)]
+    [f'/archive/kyc/Stellar_new/20191020.00Z.C3072.L79x2_pire{exp}/history/{date}00/' for date in date_linspace('20201228', '20210702', delta_day=2)] + \
+    [f'/archive/kyc/Stellar_new/20191020.00Z.C3072.L79x2_pire{exp}/history/{date}00/' for date in date_linspace('20210704', '20210705', delta_day=1)] + \
+    [f'/archive/kyc/Stellar_new/20191020.00Z.C3072.L79x2_pire{exp}/history/{date}00/' for date in date_linspace('20210707', '20210708', delta_day=1)] + \
+    [f'/archive/kyc/Stellar_new/20191020.00Z.C3072.L79x2_pire{exp}/history/{date}00/' for date in date_linspace('20210710', '20220120', delta_day=1)]
     else:
         return \
     [f'/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire{exp}/history/{date}00/' for date in date_linspace('20191020', '20201223', delta_day=5)] + \
@@ -73,6 +76,11 @@ def load_shield(datebeg, dateend, field, exp='', coarse=True):
 
     filepaths = [f'{folder}{field}_C3072_{res}.fre.nc' for folder in _folder_list(exp)[ifilebeg:ifileend]]
     print(filepaths[0])
+
+    ## check if files exist
+    for filepath in filepaths:
+        if not os.path.isfile(filepath):
+            raise FileNotFoundError(f'{filepath} not found')
     
     ## dmget all files
     os.system('dmget '+' '.join(filepaths))

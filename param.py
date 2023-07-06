@@ -13,6 +13,9 @@ def shield_dates(txt=False):
         return dates
 
 def shield_months():
+    """Return ['201911', '201912', '202001', '202002', ..., '202111', '202112']
+    """
+
     strings = []
     for yr in range(2019, 2021+1):
         for mo in range(1, 12+1):
