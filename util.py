@@ -3,7 +3,7 @@ import xarray as xr
 
 import datetime
 
-from scipy.interpolate import griddata
+from scipy.interpolate import interp1d, griddata
 
 import sys
 sys.path.append('/home/tlh/ipy')
@@ -120,6 +120,31 @@ def _flip_y_2d(da):
 
 def flip_y(da):
     return op_2d_to_nd(_flip_y_2d, da)
+
+def exchange_xy(da, ymin=None, ymax=None):
+    """exchange the x and y coordinates of the input 1d data, interpolating the original y coordinate to even spaces between ymin and ymax
+    """
+    
+    xname = da.dims[0]
+    yname = da.name
+    
+    xx = da[xname].values
+    yy = da.values
+    
+    ## remove nan
+    xx = xx[np.isfinite(yy)]
+    yy = yy[np.isfinite(yy)]
+    
+    if ymin == None:
+        ymin = np.min(yy)
+        
+    if ymax == None:
+        ymax = np.max(yy)
+    
+    yeven = np.linspace(ymin, ymax, len(yy))
+    xnew = interp1d(yy, xx, fill_value='extrapolate')(yeven)
+    
+    return xr.DataArray(xnew, coords=[yeven], dims=[yname], name=xname)
 
 def sph2cart(da):
     """da is 2d on a sphere such as StageIV data"""
