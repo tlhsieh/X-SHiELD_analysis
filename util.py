@@ -121,8 +121,8 @@ def _flip_y_2d(da):
 def flip_y(da):
     return op_2d_to_nd(_flip_y_2d, da)
 
-def exchange_xy(da, ymin=None, ymax=None):
-    """exchange the x and y coordinates of the input 1d data, interpolating the original y coordinate to even spaces between ymin and ymax
+def exchange_xy(da, yvec=[]):
+    """exchange the x and y coordinates of the input 1d data, after interpolating the original y axis to yvec
     """
     
     xname = da.dims[0]
@@ -134,17 +134,13 @@ def exchange_xy(da, ymin=None, ymax=None):
     ## remove nan
     xx = xx[np.isfinite(yy)]
     yy = yy[np.isfinite(yy)]
+
+    if len(yvec) == 0:
+        yvec = np.linspace(np.min(yy), np.max(yy), len(yy))
     
-    if ymin == None:
-        ymin = np.min(yy)
-        
-    if ymax == None:
-        ymax = np.max(yy)
+    xnew = interp1d(yy, xx, fill_value='extrapolate')(yvec)
     
-    yeven = np.linspace(ymin, ymax, len(yy))
-    xnew = interp1d(yy, xx, fill_value='extrapolate')(yeven)
-    
-    return xr.DataArray(xnew, coords=[yeven], dims=[yname], name=xname)
+    return xr.DataArray(xnew, coords=[yvec], dims=[yname], name=xname)
 
 def sph2cart(da):
     """da is 2d on a sphere such as StageIV data"""
