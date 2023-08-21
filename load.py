@@ -19,6 +19,13 @@ def load_land():
 
     return land_frac
 
+def load_orog():
+    """AM4's surface height"""
+
+    orog = xr.open_dataset('/archive/Ming.Zhao/awg/warsaw_201710/c192L33_am4p0_2010climo_new/gfdl.ncrc4-intel-prod-openmp/pp/atmos/atmos.static.nc')['orog']
+
+    return orog
+
 def load_zsurf():
     """X-SHiELD's coarse-grained surface height"""
 
