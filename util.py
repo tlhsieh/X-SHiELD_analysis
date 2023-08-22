@@ -192,6 +192,33 @@ def bin_average(x, y, bins=10):
     
     return x_avg, y_avg
 
+def scatter_to_percentiles(xvec, yvec, edges=[], percentiles=[50]):
+    """Percentile values over each x bin"""
+
+    if len(edges) == 0:
+        edges = np.linspace(np.nanmin(xvec), np.nanmax(xvec), 101)
+        
+    idxsort = np.argsort(xvec)
+    xsorted = xvec[idxsort]
+    ysorted = yvec[idxsort]
+    
+    idxedges = np.searchsorted(xsorted, edges)
+    
+    output = np.zeros((len(edges) - 1, len(percentiles)))
+    
+    for i in range(len(edges) - 1):
+        subvec = ysorted[idxedges[i]:idxedges[i+1]]
+        if len(subvec) > 0:
+            output[i,:] = np.percentile(subvec, percentiles)
+        else:
+            output[i,:] = np.nan
+            
+        # output[i,:] = np.mean(subvec) # equivalent to bin_average()
+        
+    bins = (edges[:-1] + edges[1:])/2
+        
+    return bins, output
+    
 def find_corrupted_files(exp='', field='tsfc_coarse'):
     list1 = glob.glob(f'/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire{exp}/history/*/{field}*.nc', recursive=True)
     list2 = glob.glob(f'/archive/kyc/Stellar_new/20191020.00Z.C3072.L79x2_pire{exp}/history/*/{field}*.nc', recursive=True)
