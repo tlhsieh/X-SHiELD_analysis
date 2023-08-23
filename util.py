@@ -142,6 +142,23 @@ def exchange_xy(da, yvec=[]):
     
     return xr.DataArray(xnew, coords=[yvec], dims=[yname], name=xname)
 
+def pdf_to_percentile(pdf):
+    """Given an 1d xr.DataArray p(x), compute CDF then return x(percentile)
+    """
+    
+    if np.sum(pdf) < 0.99:
+        print('Warning: sum of PDF should be 1')
+        
+    cdf = np.cumsum(pdf)
+    cdf_exchanged = exchange_xy(cdf)
+    
+    xname = cdf_exchanged.dims[0]
+    xvec = cdf_exchanged[xname]
+    
+    percentile = xvec*100
+    
+    return xr.DataArray(cdf_exchanged.values, coords=[percentile], dims=['Percentile'], name=cdf_exchanged.name)
+    
 def sph2cart(da):
     """da is 2d on a sphere such as StageIV data"""
     
