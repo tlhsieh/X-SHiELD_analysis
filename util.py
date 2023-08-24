@@ -159,6 +159,29 @@ def pdf_to_percentile(pdf):
     
     return xr.DataArray(cdf_exchanged.values, coords=[percentile], dims=['Percentile'], name=cdf_exchanged.name)
     
+def pdf_to_log10percentile(pdf, vmin=-5, vmax=-1):
+    """Given an 1d xr.DataArray p(x), compute CDF then return x(log10(1 - percentile))
+    This calculation prevents loss of data for extreme events. 
+    
+    E.g., vmin = -6 gives percentile value of 1 - 1e-5, vmax = -1 gives percentile value of 0.9 (i.e. 90th percentile)
+    
+    Note: don't convert the horizontal axis here, instead do it when plotting to preserve the log scale
+        xticks = np.arange(-6, 0, 1.)
+        plt.xticks(xticks, 100 - 100*10**xticks)
+        plt.xticks(rotation=45)
+        plt.xlabel('Percentile')
+        plt.gca().invert_xaxis()
+    """
+    
+    if np.sum(pdf) < 0.99:
+        print('Warning: sum of PDF should be 1')
+        
+    cdf = np.cumsum(pdf)
+    cdf_extreme = np.log10(1 - cdf) # change the vertical axis to emphasize the extreme events
+    cdf_exchanged = exchange_xy(cdf_extreme, np.linspace(vmin, vmax, len(cdf)))
+    
+    return cdf_exchanged.rename({cdf.name: '1 - log10(perc)'})
+    
 def sph2cart(da):
     """da is 2d on a sphere such as StageIV data"""
     
