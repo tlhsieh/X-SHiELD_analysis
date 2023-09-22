@@ -1,3 +1,5 @@
+import numpy as np
+import xarray as xr
 import geopandas
 import matplotlib.cbook as cbook
 
@@ -35,3 +37,39 @@ def plot_box(ax, limits, lw=3, ls='--', c='c'):
 def plot_box_whisker(ax, data, position, c='k', lw=1, label='', whis=(5, 95)):
     stats = cbook.boxplot_stats(data, whis=whis) # whis=(0, 100) shows min and max
     ax.bxp(stats, positions=[position], boxprops={'color': c, 'linewidth': lw}, whiskerprops={'color': c, 'linewidth': lw}, capprops={'color': c, 'linewidth': lw}, medianprops={'color': c, 'linewidth': lw, 'label': label}, showfliers=False) # showfliers is redundant when whis=(0, 100)
+
+def _find_jump(array1d):
+    """return the index at which array1d jumps from 0 to 360 or from 360 to 0"""
+    
+    return np.argmax(abs(np.diff(array1d)) > 350) + 1
+
+def plot_tile_boundary(ax, color='k', transform=None):
+    """Example: plot_tile_boundary(ax, transform=ccrs.PlateCarree())"""
+    
+    if transform is None:
+        transform = ax.transData
+        
+    ds = xr.concat([xr.open_dataset(f'/archive/kyc/Stellar/20191020.00Z.C3072.L79x2_pire/history/2019102000/grid_spec_coarse.tile{i}.nc') for i in range(1, 6+1)], dim='tile')
+
+    ax.plot(ds['grid_lont_coarse'][1][:, 0], ds['grid_latt_coarse'][1][:, 0], c=color, transform=transform)
+    ax.plot(ds['grid_lont_coarse'][1][:, -1], ds['grid_latt_coarse'][1][:, -1], c=color, transform=transform)
+    
+    ax.plot(ds['grid_lont_coarse'][2][0, :], ds['grid_latt_coarse'][2][0, :], c=color, transform=transform)
+    ax.plot(ds['grid_lont_coarse'][2][-1, :], ds['grid_latt_coarse'][2][-1, :], c=color, transform=transform)
+    ax.plot(ds['grid_lont_coarse'][2][:, -1], ds['grid_latt_coarse'][2][:, -1], c=color, transform=transform)
+    
+    ax.plot(ds['grid_lont_coarse'][4][0, :], ds['grid_latt_coarse'][4][0, :], c=color, transform=transform)
+    ax.plot(ds['grid_lont_coarse'][4][-1, :], ds['grid_latt_coarse'][4][-1, :], c=color, transform=transform)
+    
+    ax.plot(ds['grid_lont_coarse'][5][0, :], ds['grid_latt_coarse'][5][0, :], c=color, transform=transform)
+    ax.plot(ds['grid_lont_coarse'][5][:, 0], ds['grid_latt_coarse'][5][:, 0], c=color, transform=transform)
+    ax.plot(ds['grid_lont_coarse'][5][:, -1], ds['grid_latt_coarse'][5][:, -1], c=color, transform=transform)
+    
+    i_jump = _find_jump(ds['grid_lont_coarse'][2][:, 0])
+    ax.plot(ds['grid_lont_coarse'][2][:i_jump, 0], ds['grid_latt_coarse'][2][:i_jump, 0], c=color, transform=transform)
+    ax.plot(ds['grid_lont_coarse'][2][i_jump:, 0], ds['grid_latt_coarse'][2][i_jump:, 0], c=color, transform=transform)
+    
+    i_jump = _find_jump(ds['grid_lont_coarse'][5][-1, :])
+    ax.plot(ds['grid_lont_coarse'][5][-1, :i_jump], ds['grid_latt_coarse'][5][-1, :i_jump], c=color, transform=transform)
+    ax.plot(ds['grid_lont_coarse'][5][-1, i_jump:], ds['grid_latt_coarse'][5][-1, i_jump:], c=color, transform=transform)
+    
