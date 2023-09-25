@@ -74,7 +74,6 @@ def _op_2d_to_4d(func2d, da4d):
     return xr.DataArray(computed, coords=coords, dims=dims, name=da4d.name)
 
 def op_2d_to_nd(func2d, da):
-
     ndim = len(da.dims)
     if ndim == 2:
         return func2d(da)
@@ -84,6 +83,12 @@ def op_2d_to_nd(func2d, da):
         return _op_2d_to_4d(func2d, da)
     else:
         print("ndim needs to be 2, 3 or 4")
+
+def roll_lon_1d(lon):
+    to_shift = lon > 180
+    lon = lon - 360*to_shift
+    
+    return lon
 
 def _roll_lon_2d(da):
     """from lon = 0-360 to lon = -180-180"""
