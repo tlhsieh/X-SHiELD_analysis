@@ -26,6 +26,10 @@ def plot_states(ax, plot_world=True):
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
 
+def thick_axes(ax):
+    for axis in ['top','bottom','left','right']:
+        ax.spines[axis].set_linewidth(4)
+        
 def plot_box(ax, limits, lw=3, ls='--', c='c'):
     xlim = limits[0]
     ylim = limits[1]
