@@ -118,6 +118,20 @@ def roll_lon(da):
 
     return op_2d_to_nd(_roll_lon_2d, da)
 
+def _roll_lon_axis_2d(da):
+    xname = da.dims[-1]
+    yname = da.dims[-2]
+
+    return xr.DataArray(da.values, coords=[da[yname].values, roll_lon_1d(da[xname].values)], dims=da.dims)
+
+def roll_lon_axis(da):
+    """Designed for regional data in the western hemisphere
+    From lon = 0-360 to lon = -180-180
+    Change the lon axis only, not the data
+    """
+
+    return op_2d_to_nd(_roll_lon_axis_2d, da)
+
 def _flip_y_2d(da):
     da_out = xr.DataArray(np.flip(da.values, axis=-2), coords=[np.flip(da[da.dims[-2]].values), da[da.dims[-1]]], dims=da.dims)
 
@@ -221,11 +235,18 @@ def crop(da, xlim, ylim):
     xname = da.dims[-1]
     yname = da.dims[-2]
 
-    if xlim[0] < da[xname].values[0]:
-        da = roll_lon(da)
+    if xlim[0] < da[xname].values[0] and (da[xname].values[-1] - da[xname].values[0]) > 350: # if out of bounds can be fixed by roll_lon
+        if xlim[1] < da[xname].values[0]: # if box is entirely in the western hemisphere
+            da = da.sel({xname: slice(xlim[0]+360, xlim[1]+360), yname: slice(ylim[0], ylim[1])})
+            da = roll_lon_axis(da) # fast
+        else: # if box crosses 0 deg
+            da = roll_lon(da) # slow
+            da = da.sel({xname: slice(xlim[0], xlim[1]), yname: slice(ylim[0], ylim[1])})
+    else: # don't need to roll
+        da = da.sel({xname: slice(xlim[0], xlim[1]), yname: slice(ylim[0], ylim[1])})
 
-    return da.sel({xname: slice(xlim[0], xlim[1]), yname: slice(ylim[0], ylim[1])})
-
+    return da
+    
 def bin_average(x, y, bins=10):
     """Return y(x), where y is averaged over each x bin"""
     
