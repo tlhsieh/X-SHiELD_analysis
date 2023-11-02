@@ -111,7 +111,7 @@ def load_shield(datebeg, dateend, field, exp='', coarse=True):
     
     return da
     
-def load_shield_pp(monthlist, yr, field='pr', exp='', coarse_grain=False):
+def load_shield_pp_single_yr(monthlist, yr, field='pr', exp='', coarse_grain=False):
     """load post-processed monthly mean data"""
 
     mo_dim = pd.Index(monthlist, name='time')
@@ -132,6 +132,15 @@ def load_shield_pp(monthlist, yr, field='pr', exp='', coarse_grain=False):
         da = xr.concat([xr.open_dataarray(filepath) for filepath in filepaths], dim=mo_dim)
 
     return da
+    
+def load_shield_pp(monthlist, yrrange, field='pr', exp='', coarse_grain=False):
+    """yrrange: a single year or a list of years
+    """
+
+    if type(yrrange) == int:
+        return load_shield_pp_single_yr(monthlist, yrrange, field, exp, coarse_grain)
+
+    return xr.concat([load_shield_pp_single_yr(monthlist, yr, field, exp, coarse_grain) for yr in yrrange], dim='time')
 
 def _spear_convention(date):
     """see /archive/Liwei.Jia/spear_med/rf_hist/fcst/s_j11_OTA_IceAtmRes_L33/README"""
