@@ -84,11 +84,58 @@ def op_2d_to_nd(func2d, da):
     else:
         print("ndim needs to be 2, 3 or 4")
 
-def roll_lon_1d(lon):
+def change_lon(lon):
+    """change lon value; order not changed"""
+
     to_shift = lon > 180
     lon = lon - 360*to_shift
     
     return lon
+
+def _change_lon_axis_1d(da):
+    xname = da.dims[-1]
+
+    return xr.DataArray(da.values, coords=[change_lon(da[xname].values)], dims=da.dims)
+
+def _change_lon_axis_2d(da):
+    xname = da.dims[-1]
+    yname = da.dims[-2]
+
+    return xr.DataArray(da.values, coords=[da[yname].values, change_lon(da[xname].values)], dims=da.dims)
+
+def change_lon_axis(da):
+    """Designed for regional data in the western hemisphere
+    From lon = 0-360 to lon = -180-180
+    Change the lon axis only, not the data
+    """
+
+    if len(da.dims) == 1:
+        return _change_lon_axis_1d(da)
+
+    return op_2d_to_nd(_change_lon_axis_2d, da)
+
+def _roll_lon_1d(da):
+    """from lon = 0-360 to lon = -180-180"""
+    
+    xvec = da[da.dims[-1]].values
+    nx = len(xvec)
+    
+    if np.max(xvec) - np.min(xvec) < 350: # do not apply to regional data
+        return da
+    
+    if np.max(xvec) < 180: # no need to roll
+        return da
+    
+    da_out = xr.DataArray(np.roll(da.values, nx//2, axis=-1), 
+                       coords=[np.concatenate([xvec[nx//2:] - 360, xvec[:nx//2]])], 
+                       dims=[da.dims[-1]])
+    
+    try: # preserve long_name
+        da_out.attrs['long_name'] = da.attrs['long_name']
+    except KeyError:
+        pass
+    
+    return da_out
 
 def _roll_lon_2d(da):
     """from lon = 0-360 to lon = -180-180"""
@@ -116,22 +163,11 @@ def _roll_lon_2d(da):
 def roll_lon(da):
     """from lon = 0-360 to lon = -180-180"""
 
+    if len(da.dims) == 1:
+        return _roll_lon_1d(da)
+
     return op_2d_to_nd(_roll_lon_2d, da)
-
-def _roll_lon_axis_2d(da):
-    xname = da.dims[-1]
-    yname = da.dims[-2]
-
-    return xr.DataArray(da.values, coords=[da[yname].values, roll_lon_1d(da[xname].values)], dims=da.dims)
-
-def roll_lon_axis(da):
-    """Designed for regional data in the western hemisphere
-    From lon = 0-360 to lon = -180-180
-    Change the lon axis only, not the data
-    """
-
-    return op_2d_to_nd(_roll_lon_axis_2d, da)
-
+    
 def _flip_y_2d(da):
     da_out = xr.DataArray(np.flip(da.values, axis=-2), coords=[np.flip(da[da.dims[-2]].values), da[da.dims[-1]]], dims=da.dims)
 
@@ -238,7 +274,7 @@ def crop(da, xlim, ylim):
     if xlim[0] < da[xname].values[0] and (da[xname].values[-1] - da[xname].values[0]) > 350: # if out of bounds can be fixed by roll_lon
         if xlim[1] < da[xname].values[0]: # if box is entirely in the western hemisphere
             da = da.sel({xname: slice(xlim[0]+360, xlim[1]+360), yname: slice(ylim[0], ylim[1])})
-            da = roll_lon_axis(da) # fast
+            da = change_lon_axis(da) # fast
         else: # if box crosses 0 deg
             da = roll_lon(da) # slow
             da = da.sel({xname: slice(xlim[0], xlim[1]), yname: slice(ylim[0], ylim[1])})

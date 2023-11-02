@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 import geopandas
 import matplotlib.cbook as cbook
-from util import roll_lon_1d
+from util import change_lon
 
 def _get_world():
     world = geopandas.read_file(geopandas.datasets.get_path('naturalearth_lowres'))
@@ -68,7 +68,7 @@ def plot_tile_boundary(ax, color='k', transform=None, roll_lon=False):
         transform = ax.transData
 
     if roll_lon:
-        roll_func = roll_lon_1d
+        roll_func = change_lon
     else:
         roll_func = lambda a: a
         
