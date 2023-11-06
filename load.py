@@ -137,7 +137,7 @@ def load_shield_pp(monthlist, yrrange, field='pr', exp='', coarse_grain=False):
     """yrrange: a single year or a list of years
     """
 
-    if type(yrrange) == int:
+    if type(yrrange) == str:
         return load_shield_pp_single_yr(monthlist, yrrange, field, exp, coarse_grain)
 
     return xr.concat([load_shield_pp_single_yr(monthlist, yr, field, exp, coarse_grain) for yr in yrrange], dim='time')
