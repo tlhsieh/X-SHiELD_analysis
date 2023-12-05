@@ -14,13 +14,22 @@ def _get_states():
     states = states.to_crs('EPSG:4326')
     return states
 
-def plot_states(ax, plot_world=True):
+def plot_world(ax):
+    """
+    lon range needs to be -180 to 180
+    """
+    
+    _get_world().boundary.plot(ax=ax, colors='k', linewidths=0.5)
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+
+def plot_states(ax, world=True):
     """
     lon range needs to be -180 to 180
     Example: plot_states(plt.gca())
     """
     
-    if plot_world:
+    if world:
         _get_world().boundary.plot(ax=ax, colors='k', linewidths=0.5)
     _get_states().boundary.plot(ax=ax, colors='k', linewidths=0.5)
     ax.set_xlabel('Longitude')
