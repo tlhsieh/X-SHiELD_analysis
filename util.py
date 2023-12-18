@@ -5,10 +5,6 @@ import datetime
 
 from scipy.interpolate import interp1d, griddata
 
-import sys
-sys.path.append('/home/tlh/ipy')
-from gfd import xrinterp
-
 import glob
 
 def datenum2txt(str_num, day=True):
