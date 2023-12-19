@@ -376,7 +376,9 @@ def load_stage4(datebeg, dateend):
     
     return pr
 
-def load_msewp(path, filebeg, fileend, fast=False):
+def load_msewp(filebeg, fileend, fast=False):
+    path = '/archive/Linjiong.Zhou/public/MSWEP/data/'
+
     filedates = date_linspace(beg_date, end_date, delta_day=1)
     
     if fast:
@@ -390,7 +392,9 @@ def load_msewp(path, filebeg, fileend, fast=False):
     
     return pr
 
-def load_prism_monthly(path, datebeg, dateend):
+def load_prism_monthly(datebeg, dateend):
+    path = '/work/tlh/PRISM/monthly/ppt/'
+
     ## collect a list of months in which simulation is initialized
     monthbeg = datetime.datetime.strptime(datebeg, '%Y%m')
     monthend = datetime.datetime.strptime(dateend, '%Y%m')
