@@ -6,7 +6,7 @@ import os
 import datetime
 import dateutil
 
-from util import date_linspace
+from util import date_linspace, _flip_y_2d
 
 import sys
 sys.path.append('/home/tlh/ipy')
@@ -409,7 +409,7 @@ def load_prism_monthly(datebeg, dateend):
     print(filedates)
     
     field = 'band_data'
-    das = [flip_y_2d(xr.open_dataset(f'{path}{date}', engine='rasterio', chunks={'time': 1})[field].isel(band=0, drop=True)) for date in filedates]
+    das = [_flip_y_2d(xr.open_dataset(f'{path}{date}', engine='rasterio', chunks={'time': 1})[field].isel(band=0, drop=True)) for date in filedates]
     das_interp = [xrinterp(das[i], das[0]) for i in range(1, len(das))]
     pr = xr.concat(das_interp, dim='time')
 
