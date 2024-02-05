@@ -317,12 +317,21 @@ def scatter_to_percentiles(xvec, yvec, edges=[], percentiles=[50]):
         
     return bins, output
 
+def nan2zero(da):
+    nparray = da.values
+    nparray[np.isnan(nparray)] = 0
+
+    return xr.DataArray(nparray, coords=da.coords)
+
+from scipy.interpolate import interp2d
+
 def xrinterp(da, target):
     """interpolation to target's grid"""
     
     da = nan2zero(da) # some data have nan on land, which breaks interp2d
     npinterp = interp2d(da[da.dims[-1]], da[da.dims[-2]], da)(target[target.dims[-1]], target[target.dims[-2]])
     da2 = xr.DataArray(npinterp, coords=[target[target.dims[-2]], target[target.dims[-1]]], dims=[target.dims[-2], target.dims[-1]], name=da.name)
+    
     return da2
     
 def find_corrupted_files(exp='', field='tsfc_coarse'):
