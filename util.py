@@ -317,6 +317,33 @@ def scatter_to_percentiles(xvec, yvec, edges=[], percentiles=[50]):
         
     return bins, output
 
+def scatter2hist2d(xscatter, yscatter, xbins=[], ybins=[], weights=None, min_sample=0, xname='x', yname='y', name=''):
+    if weights is None:
+        ivalid = (np.isfinite(xscatter))*(np.isfinite(yscatter))
+        xscatter = xscatter[ivalid]
+        yscatter = yscatter[ivalid]
+    else:
+        ivalid = (np.isfinite(xscatter))*(np.isfinite(yscatter))*(np.isfinite(weights))
+        xscatter = xscatter[ivalid]
+        yscatter = yscatter[ivalid]
+        weights = weights[ivalid]
+    
+    if len(xbins) == 0:
+        xbins = np.linspace(np.min(xscatter), np.max(xscatter), 50)
+    if len(ybins) == 0:
+        ybins = np.linspace(np.min(yscatter), np.max(yscatter), 50)
+        
+    hist2d_weighted, xedges, yedges = np.histogram2d(xscatter, yscatter, bins=(xbins, ybins), weights=weights, density=False)
+    hist2d_unweighted, xedges, yedges = np.histogram2d(xscatter, yscatter, bins=(xbins, ybins), density=False)
+    hist2d = hist2d_weighted/hist2d_unweighted
+    
+    hist2d = np.nan_to_num(hist2d, nan=0.0)*(hist2d_unweighted > min_sample) # zero out bins with too few samples
+    
+    return xr.DataArray(np.transpose(hist2d), 
+                        coords=[(ybins[:-1] + ybins[1:])/2, (xbins[:-1] + xbins[1:])/2], 
+                        dims=[yname, xname],
+                        name=name)
+                        
 def nan2zero(da):
     nparray = da.values
     nparray[np.isnan(nparray)] = 0

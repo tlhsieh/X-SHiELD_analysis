@@ -30,6 +30,9 @@ def boundaries(domain_name=''):
     if domain_name == '':
         xlim = (-180, 180)
         ylim = (-90, 90)
+    elif domain_name == 'no_polar':
+        xlim = (-180, 180)
+        ylim = (-66.5, 66.5)
     elif domain_name == 'W_NA':
         xlim = (-150, -110)
         ylim = (30, 65)
